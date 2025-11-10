@@ -147,3 +147,32 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+// @desc    Dev login (auto-create demo user)
+// @route   POST /api/users/dev-login
+// @access  Public (guarded by env to dev only)
+exports.devLogin = async (req, res) => {
+  try {
+    const allow = process.env.ALLOW_DEMO_LOGIN === 'true' || process.env.NODE_ENV === 'development';
+    if (!allow) {
+      return res.status(403).json({ success: false, message: 'Demo login is disabled' });
+    }
+
+    const email = process.env.DEMO_EMAIL || 'demo@myblog.local';
+    const password = process.env.DEMO_PASSWORD || 'demo12345';
+
+    let user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      user = await User.create({ name: 'Demo User', email, password });
+    }
+
+    const token = user.getSignedJwtToken();
+    return res.status(200).json({
+      success: true,
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};

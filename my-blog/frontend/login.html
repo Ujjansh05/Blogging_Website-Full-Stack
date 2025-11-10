@@ -68,6 +68,9 @@
                 <span id="toggleText">Don't have an account?</span>
                 <a href="#" id="toggleLink">Register here</a>
             </p>
+            <div style="margin-top:1.5rem; text-align:center;">
+                <button id="demoLoginBtn" type="button" class="btn-secondary" style="width:100%;">Demo Login (Dev)</button>
+            </div>
         </div>
     </div>
 
@@ -191,6 +194,33 @@
             successMessage.textContent = message;
             successMessage.style.display = 'block';
             errorMessage.style.display = 'none';
+        }
+
+        // Demo login button (development convenience)
+        const demoBtn = document.getElementById('demoLoginBtn');
+        if (demoBtn) {
+            demoBtn.addEventListener('click', async () => {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+                demoBtn.disabled = true;
+                demoBtn.textContent = 'Logging in...';
+                try {
+                    const resp = await fetch(`${API_URL}/users/dev-login`, { method: 'POST' });
+                    const data = await resp.json();
+                    if (data.success) {
+                        setAuth(data.token, data.user);
+                        showSuccess('Demo login successful! Redirecting...');
+                        setTimeout(() => window.location.href = 'index.html', 900);
+                    } else {
+                        showError(data.message || 'Demo login failed');
+                    }
+                } catch (e) {
+                    showError('Demo login error');
+                } finally {
+                    demoBtn.disabled = false;
+                    demoBtn.textContent = 'Demo Login (Dev)';
+                }
+            });
         }
     </script>
 </body>
